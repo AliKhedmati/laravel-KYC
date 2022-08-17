@@ -1,0 +1,38 @@
+{
+    "name": "alikhedmati/laravel-kyc",
+    "description": "Laravel KYC",
+    "license": "MIT",
+    "require": {
+        "php": "^8",
+        "illuminate/container": "^9",
+        "illuminate/contracts": "^9",
+        "illuminate/support": "^9",
+        "guzzlehttp/guzzle": "^7"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Alikhedmati\\Kyc\\KycServiceProvider"
+            ],
+            "aliases": {
+                "CryptoExchange": "Alikhedmati\\Kyc\\Facades\\Kyc"
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Alikhedmati\\Kyc\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ali Khedmati",
+            "email": "ali@khedmati.ir"
+        }
+    ],
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
