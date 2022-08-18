@@ -1,1 +1,9 @@
 <?php
+
+return [
+    'providers' =>  [
+        'finnotech' =>  [
+            
+        ],
+    ],
+];
