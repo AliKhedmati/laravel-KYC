@@ -38,7 +38,7 @@ class Finnotech
 
         if (!$clientId || !$clientPassword){
 
-            throw new KycException(trans('kyc::errors.clientIdOrPasswordMissing'));
+            throw new KycException(trans('kyc::errors.requiredDataMissed'));
 
         }
 
@@ -52,6 +52,22 @@ class Finnotech
 
     public function authenticate(array $scopes): Collection
     {
+        /**
+         * Fetch required parameters.
+         */
+
+        $clientNationalCode = config('kyc.drivers.finnotech.client-national-code');
+
+        if (!$clientNationalCode){
+
+            throw new KycException(trans('kyc::errors.requiredDataMissed'));
+
+        }
+
+        /**
+         * Handle scopes.
+         */
+
 
 
         /**
@@ -60,7 +76,9 @@ class Finnotech
 
         $request = $this->client()->post('dev/v2/oauth2/token', [
             'json'  =>  [
-
+                'grant_type'    =>  'client_credentials',
+                'nid'   =>  $clientNationalCode,
+                'scopes'    =>  '',
             ],
             'headers'   =>  [
                 'Authorization' =>  'Basic '. $this->getAuthenticationString()

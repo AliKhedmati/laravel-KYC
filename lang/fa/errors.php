@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'clientIdOrPasswordMissing'    =>  'اطلاعات موردنیاز به درستی تکمیل نشده اند.',
+    'requiredDataMissed'    =>  'اطلاعات موردنیاز به درستی تکمیل نشده اند.',
 ];
