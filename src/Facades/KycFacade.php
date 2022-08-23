@@ -8,6 +8,6 @@ class KycFacade extends Facade
 {
     public static function getFacadeAccessor(): string
     {
-        return 'kyc';
+        return 'Kyc';
     }
 }
