@@ -7,19 +7,10 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class Finnotech
 {
-    /**
-     * @var string
-     */
-
-    private string $restApiBase;
-
-    public function __construct()
-    {
-        $this->restApiBase = config('kyc.drivers.finnotech.base-url');
-    }
 
     /**
      * @return string
@@ -113,15 +104,9 @@ class Finnotech
          * Fetch client-id and client-password.
          */
 
-        $clientId = config('kyc.drivers.finnotech.client-id');
+        $clientId = $this->getClientId();
 
-        $clientPassword = config('kyc.drivers.finnotech.client-password');
-
-        if (!$clientId || !$clientPassword){
-
-            throw new KycException(trans('kyc::errors.requiredDataMissed'));
-
-        }
+        $clientPassword = $this->getClientPassword();
 
         /**
          * Generate and return AuthenticationString.
@@ -142,15 +127,9 @@ class Finnotech
          * Fetch required parameters.
          */
 
-        $clientNationalCode = config('kyc.drivers.finnotech.client-national-code');
+        $clientNationalCode = $this->getClientNationalCode();
 
-        $scopes = config('kyc.drivers.finnotech.scopes');
-
-        if (!$clientNationalCode || !$scopes){
-
-            throw new KycException(trans('kyc::errors.requiredDataMissed'));
-
-        }
+        $scopes = $this->getClientScopes();
 
         /**
          * Make request.
@@ -230,6 +209,8 @@ class Finnotech
     /**
      * @param bool $isAuthenticated
      * @return Client
+     * @throws GuzzleException
+     * @throws KycException
      */
 
     private function client(bool $isAuthenticated = false): Client
@@ -241,14 +222,149 @@ class Finnotech
 
         if ($isAuthenticated){
 
-            $headers['Authorization'] = $this->getAccessToken();
+            $headers['Authorization'] = 'Bearer '. $this->getAccessToken();
 
         }
 
         return new Client([
-            'base_uri'  =>  $this->restApiBase,
+            'base_uri'  =>  $this->getRestAPIBase(),
             'headers'   =>  $headers,
             'http_errors'   =>  false
         ]);
+    }
+
+    /**
+     * @param string $cardNumber
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getCardInformation(string $cardNumber): Collection
+    {
+        /**
+         * Make request.
+         */
+
+        $request = $this->client(true)->get('mpg/v2/clients/' . $this->getClientId() . '/cards/' . $cardNumber, [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId()
+            ],
+        ]);
+
+        /**
+         * Handle request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Return.
+         */
+
+        return collect(json_decode($request->getBody()->getContents())->result);
+    }
+
+    /**
+     * @return string
+     */
+
+    private function generateTrackId(): string
+    {
+        return Str::orderedUuid()->toString();
+    }
+
+    /**
+     * @return string
+     * @throws KycException
+     */
+
+    public function getClientId(): string
+    {
+        $clientId = config('kyc.drivers.finnotech.client-id');
+
+        if (!$clientId){
+
+            throw new KycException(trans('kyc::errors.requiredDataMissed'));
+
+        }
+
+        return $clientId;
+    }
+
+    /**
+     * @return string
+     * @throws KycException
+     */
+
+    public function getClientPassword(): string
+    {
+        $clientPassword = config('kyc.drivers.finnotech.client-password');
+
+        if (!$clientPassword){
+
+            throw new KycException(trans('kyc::errors.requiredDataMissed'));
+
+        }
+
+        return $clientPassword;
+    }
+
+    /**
+     * @return string
+     * @throws KycException
+     */
+
+    public function getClientNationalCode(): string
+    {
+        $clientNationalCode = config('kyc.drivers.finnotech.client-national-code');
+
+        if (!$clientNationalCode){
+
+            throw new KycException(trans('kyc::errors.requiredDataMissed'));
+
+        }
+
+        return $clientNationalCode;
+    }
+
+    /**
+     * @return string
+     * @throws KycException
+     */
+
+    public function getClientScopes(): string
+    {
+        $clientScopes = config('kyc.drivers.finnotech.scopes');
+
+        if (!$clientScopes){
+
+            throw new KycException(trans('kyc::errors.requiredDataMissed'));
+
+        }
+
+        return $clientScopes;
+    }
+
+    /**
+     * @return string
+     * @throws KycException
+     */
+
+    public function getRestAPIBase(): string
+    {
+        $restAPIBase = config('kyc.drivers.finnotech.base-url');
+
+        if (!$restAPIBase){
+
+            throw new KycException(trans('kyc::errors.requiredDataMissed'));
+
+        }
+
+        return $restAPIBase;
     }
 }
