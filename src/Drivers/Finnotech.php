@@ -386,7 +386,7 @@ class Finnotech
          * Make request.
          */
 
-        $request = $this->client(true)->get('kyc/v2/clients/' . $this->getClientId(). '/shahkar/smsSend', [
+        $request = $this->client(true)->get('facility/v2/clients/' . $this->getClientId() . '/shahkar/verify', [
             'query' =>  [
                 'trackId'   =>  $this->generateTrackId(),
                 'mobile'    =>  $mobile,
@@ -408,7 +408,7 @@ class Finnotech
          * Return response.
          */
 
-        return collect(json_decode($request->getBody()->getContents()));
+        return collect(json_decode($request->getBody()->getContents())->result);
     }
 
     /**
