@@ -410,4 +410,131 @@ class Finnotech
 
         return collect(json_decode($request->getBody()->getContents()));
     }
+
+    /**
+     * @param string $cardNumber
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getCardToDeposit(string $cardNumber): Collection
+    {
+        /**
+         * Make request.
+         */
+
+        $request = $this->client(true)->get('facility/v2/clients/' . $this->getClientId() . '/cardToDeposit', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId(),
+                'card'  =>  $cardNumber
+            ],
+        ]);
+
+        /**
+         * Handle Request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast and Return.
+         */
+
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect([
+            'owner' =>  $result->name,
+            'cardNumber'    =>  $cardNumber,
+            'depositNumber' =>  $result->deposit,
+            //Todo: $result->result is also available and should be added later.
+        ]);
+    }
+
+    /**
+     * @param string $cardNumber
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getCardToIban(string $cardNumber): Collection
+    {
+        /**
+         * Make Request.
+         */
+
+        $request = $this->client(true)->get('facility/v2/clients/' . $this->getClientId() . '/cardToIban', [
+            'query' =>  [
+                'version'   =>  2,
+                'trackId'   =>  $this->generateTrackId(),
+                'card'  =>  $cardNumber
+            ],
+        ]);
+
+        /**
+         * Handle Request Failure.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast And Return.
+         */
+
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect([
+            'owner' =>  $result->depositOwners,
+            'cardNumber'    =>  $cardNumber,
+            'depositNumber' =>  $result->deposit,
+            'IBAN'  =>  $result->IBAN,
+            'bankName'  =>  $result->bankName,
+            //Todo: $result->depositStatus is also available and should be added later.
+        ]);
+    }
+
+    /**
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getBanksInformation(): Collection
+    {
+        /**
+         * Make Request.
+         */
+
+        $request = $this->client(true)->get('facility/v2/clients/' . $this->getClientId() . '/banksInfo', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId()
+            ],
+        ]);
+
+        /**
+         * Handle Request Failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast And Return.
+         */
+
+        return collect(json_decode($request->getBody()->getContents())->result);
+    }
+
 }
