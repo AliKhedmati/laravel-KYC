@@ -5,6 +5,7 @@ namespace Alikhedmati\Kyc\Drivers;
 use Alikhedmati\Kyc\Exceptions\KycException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -569,6 +570,54 @@ class Finnotech
 
         /**
          * Cast and Return.
+         */
+
+        return collect(json_decode($request->getBody()->getContents())->result);
+    }
+
+    /**
+     * @param string $pathToNationalCardImage
+     * @param bool $isFrontSide
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getNationalCardOCR(string $pathToNationalCardImage, bool $isFrontSide): Collection
+    {
+
+        /**
+         * Make Request.
+         */
+
+        $request = $this->client(true)->post('kyc/v2/clients/ ' . $this->getClientId() . '/ocr', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId()
+            ],
+            'multipart' =>  [
+                [
+                    'name'  =>  'type',
+                    'contents'  =>  'uploadCard' . ($isFrontSide ? 'Front' : 'Back')
+                ],
+                [
+                    'name'  =>  'cardImage',
+                    'contents'  =>  Utils::tryFopen($pathToNationalCardImage, 'r')
+                ],
+            ],
+        ]);
+
+        /**
+         * Handle request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast And Return.
          */
 
         return collect(json_decode($request->getBody()->getContents())->result);
