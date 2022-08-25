@@ -537,4 +537,41 @@ class Finnotech
         return collect(json_decode($request->getBody()->getContents())->result);
     }
 
+    /**
+     * @param string $postalCode
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getPostalCodeInformation(string $postalCode): Collection
+    {
+        /**
+         * Make request.
+         */
+
+        $request = $this->client(true)->get('ecity/v2/clients/' . $this->getClientId() . '/postalCode',[
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId(),
+                'postalCode'    =>  $postalCode,
+            ],
+        ]);
+
+        /**
+         * Handle Request Failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast and Return.
+         */
+
+        return collect(json_decode($request->getBody()->getContents())->result);
+    }
+
 }
