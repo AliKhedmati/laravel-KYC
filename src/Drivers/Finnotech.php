@@ -121,7 +121,7 @@ class Finnotech
      * @throws GuzzleException
      */
 
-    public function createAccessToken(): Collection
+    protected function createAccessToken(): Collection
     {
         /**
          * Fetch required parameters.
@@ -172,7 +172,7 @@ class Finnotech
      * @throws KycException
      */
 
-    public function refreshAccessToken(string $refreshToken): Collection
+    protected function refreshAccessToken(string $refreshToken): Collection
     {
         /**
          * Make request.
@@ -213,7 +213,7 @@ class Finnotech
      * @throws KycException
      */
 
-    private function client(bool $isAuthenticated = false): Client
+    protected function client(bool $isAuthenticated = false): Client
     {
         $headers = [
             'Accept' => 'application/json',
@@ -266,6 +266,10 @@ class Finnotech
          * Return.
          */
 
+        /**
+         * Todo: Cast the output.
+         */
+
         return collect(json_decode($request->getBody()->getContents())->result);
     }
 
@@ -273,7 +277,7 @@ class Finnotech
      * @return string
      */
 
-    private function generateTrackId(): string
+    protected function generateTrackId(): string
     {
         return Str::orderedUuid()->toString();
     }
@@ -283,7 +287,7 @@ class Finnotech
      * @throws KycException
      */
 
-    public function getClientId(): string
+    protected function getClientId(): string
     {
         $clientId = config('kyc.drivers.finnotech.client-id');
 
@@ -301,7 +305,7 @@ class Finnotech
      * @throws KycException
      */
 
-    public function getClientPassword(): string
+    protected function getClientPassword(): string
     {
         $clientPassword = config('kyc.drivers.finnotech.client-password');
 
@@ -319,7 +323,7 @@ class Finnotech
      * @throws KycException
      */
 
-    public function getClientNationalCode(): string
+    protected function getClientNationalCode(): string
     {
         $clientNationalCode = config('kyc.drivers.finnotech.client-national-code');
 
@@ -337,7 +341,7 @@ class Finnotech
      * @throws KycException
      */
 
-    public function getClientScopes(): string
+    protected function getClientScopes(): string
     {
         $clientScopes = config('kyc.drivers.finnotech.scopes');
 
@@ -355,7 +359,7 @@ class Finnotech
      * @throws KycException
      */
 
-    public function getRestAPIBase(): string
+    protected function getRestAPIBase(): string
     {
         $restAPIBase = config('kyc.drivers.finnotech.base-url');
 
@@ -366,5 +370,44 @@ class Finnotech
         }
 
         return $restAPIBase;
+    }
+
+    /**
+     * @param string $mobile
+     * @param string $nationalCode
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function mobileAndNationalCodeVerification(string $mobile, string $nationalCode): Collection
+    {
+        /**
+         * Make request.
+         */
+
+        $request = $this->client(true)->get('kyc/v2/clients/' . $this->getClientId(). '/shahkar/smsSend', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId(),
+                'mobile'    =>  $mobile,
+                'nationalCode'  =>  $nationalCode
+            ],
+        ]);
+
+        /**
+         * Handle request failure.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Return response.
+         */
+
+        return collect(json_decode($request->getBody()->getContents()));
     }
 }
