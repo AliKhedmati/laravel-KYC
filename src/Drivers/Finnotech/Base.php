@@ -115,7 +115,7 @@ class Base
 
         if ($isAuthenticated){
 
-            $headers['Authorization'] = 'Bearer '. $this->getAccessToken();
+            $headers['Authorization'] = 'Bearer '. (new Authentication\Authentication())->getAccessToken();
 
         }
 

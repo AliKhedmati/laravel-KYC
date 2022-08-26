@@ -2,12 +2,13 @@
 
 namespace Alikhedmati\Kyc\Facades;
 
+use Alikhedmati\Kyc\Contracts\Factory;
 use Illuminate\Support\Facades\Facade;
 
-class KycFacade extends Facade
+class Kyc extends Facade
 {
     public static function getFacadeAccessor(): string
     {
-        return 'Kyc';
+        return Factory::class;
     }
 }

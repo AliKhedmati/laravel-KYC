@@ -2,7 +2,7 @@
 
 namespace Alikhedmati\Kyc\Contracts;
 
-interface Kyc
+interface Driver
 {
 
 }
