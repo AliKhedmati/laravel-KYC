@@ -134,5 +134,4 @@ class Base
     {
         return Str::orderedUuid()->toString();
     }
-
 }
