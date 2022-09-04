@@ -2,13 +2,13 @@
 
 namespace Alikhedmati\Kyc\Drivers\Finnotech\Kyc;
 
-use Alikhedmati\Kyc\Drivers\Finnotech\Base;
+use Alikhedmati\Kyc\Drivers\Finnotech\Factory;
 use Alikhedmati\Kyc\Exceptions\KycException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Support\Collection;
 
-class Kyc extends Base
+class Kyc extends Factory
 {
     /**
      * @param string $mobile

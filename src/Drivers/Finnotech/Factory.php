@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Str;
 
-class Base
+class Factory
 {
     /**
      * @return string
@@ -106,7 +106,7 @@ class Base
      * @throws KycException
      */
 
-    public function client(bool $isAuthenticated = false): Client
+    protected function client(bool $isAuthenticated = false): Client
     {
         $headers = [
             'Accept' => 'application/json',
@@ -130,7 +130,7 @@ class Base
      * @return string
      */
 
-    public function generateTrackId(): string
+    protected function generateTrackId(): string
     {
         return Str::orderedUuid()->toString();
     }

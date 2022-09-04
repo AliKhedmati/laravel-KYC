@@ -9,13 +9,13 @@ use Illuminate\Support\Manager;
 class Kyc extends Manager implements Factory
 {
     /**
-     * @param $driver
+     * @param $provider
      * @return mixed
      */
 
-    public function provider($driver = null): mixed
+    public function provider($provider = null): mixed
     {
-        return $this->driver($driver);
+        return $this->driver($provider);
     }
 
     /**

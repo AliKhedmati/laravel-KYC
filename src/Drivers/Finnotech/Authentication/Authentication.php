@@ -2,13 +2,13 @@
 
 namespace Alikhedmati\Kyc\Drivers\Finnotech\Authentication;
 
-use Alikhedmati\Kyc\Drivers\Finnotech\Base;
+use Alikhedmati\Kyc\Drivers\Finnotech\Factory;
 use Alikhedmati\Kyc\Exceptions\KycException;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
-class Authentication extends Base
+class Authentication extends Factory
 {
     /**
      * @return string
@@ -88,7 +88,6 @@ class Authentication extends Base
          */
 
         return $accessToken->only('value')->first();
-
     }
 
     /**
@@ -99,18 +98,10 @@ class Authentication extends Base
     public function getAuthenticationString(): string
     {
         /**
-         * Fetch client-id and client-password.
-         */
-
-        $clientId = $this->getClientId();
-
-        $clientPassword = $this->getClientPassword();
-
-        /**
          * Generate and return AuthenticationString.
          */
 
-        return base64_encode($clientId . ':' . $clientPassword);
+        return base64_encode($this->getClientId() . ':' . $this->getClientPassword());
     }
 
     /**
@@ -122,22 +113,14 @@ class Authentication extends Base
     public function createAccessToken(): Collection
     {
         /**
-         * Fetch required parameters.
-         */
-
-        $clientNationalCode = $this->getClientNationalCode();
-
-        $scopes = $this->getClientScopes();
-
-        /**
          * Make request.
          */
 
         $request = $this->client()->post('dev/v2/oauth2/token', [
             'json'  =>  [
                 'grant_type'    =>  'client_credentials',
-                'nid'   =>  $clientNationalCode,
-                'scopes'    =>  $scopes,
+                'nid'   =>  $this->getClientNationalCode(),
+                'scopes'    =>  $this->getClientScopes(),
             ],
             'headers'   =>  [
                 'Authorization' =>  'Basic '. $this->getAuthenticationString()

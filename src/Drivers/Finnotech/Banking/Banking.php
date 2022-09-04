@@ -2,12 +2,12 @@
 
 namespace Alikhedmati\Kyc\Drivers\Finnotech\Banking;
 
-use Alikhedmati\Kyc\Drivers\Finnotech\Base;
+use Alikhedmati\Kyc\Drivers\Finnotech\Factory;
 use Alikhedmati\Kyc\Exceptions\KycException;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
 
-class Banking extends Base
+class Banking extends Factory
 {
     /**
      * @param string $cardNumber

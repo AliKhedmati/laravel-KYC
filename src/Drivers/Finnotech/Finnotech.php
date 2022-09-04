@@ -4,7 +4,7 @@ namespace Alikhedmati\Kyc\Drivers\Finnotech;
 
 use Alikhedmati\Kyc\Contracts\Driver;
 
-class Finnotech extends Base implements Driver
+class Finnotech extends Factory implements Driver
 {
     /**
      * @return Authentication\Authentication
