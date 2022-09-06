@@ -18,8 +18,14 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function mobileAndNationalCodeVerification(string $mobile, string $nationalCode): Collection
+    public function mobileAndNationalCodeIntegration(string $mobile, string $nationalCode): Collection
     {
+        /**
+         * Set scope.
+         */
+
+        $this->setScope('facility:shahkar:get');
+
         /**
          * Make request.
          */
@@ -59,6 +65,12 @@ class Kyc extends Factory
     public function getPostalCodeInformation(string $postalCode): Collection
     {
         /**
+         * Set Scope.
+         */
+
+        $this->setScope('ecity:cc-postal-code-inquiry:get');
+
+        /**
          * Make request.
          */
 
@@ -96,6 +108,11 @@ class Kyc extends Factory
 
     public function getNationalCardOCR(string $pathToNationalCardImage, bool $isFrontSide): Collection
     {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('kyc:ocr-verification:post');
 
         /**
          * Make Request.
@@ -145,8 +162,14 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function compareVideoWithNationalCardImage(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
+    public function videoAndNationalCardImageIntegration(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
     {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('kyc:compare-live-video-with-national-card-image:post');
+
         /**
          * Make request.
          */

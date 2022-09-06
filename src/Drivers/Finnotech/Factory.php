@@ -10,6 +10,22 @@ use Illuminate\Support\Str;
 class Factory
 {
     /**
+     * @var string 
+     */
+
+    protected string $scope;
+
+    /**
+     * @param string $scope
+     * @return void
+     */
+
+    public function setScope(string $scope): void
+    {
+        $this->scope = $scope;
+    }
+    
+    /**
      * @return string
      * @throws KycException
      */
@@ -115,7 +131,7 @@ class Factory
 
         if ($isAuthenticated){
 
-            $headers['Authorization'] = 'Bearer '. (new Authentication\Authentication())->getAccessToken();
+            $headers['Authorization'] = 'Bearer '. (new Authentication\Authentication())->getAccessToken($this->scope ?: null);
 
         }
 

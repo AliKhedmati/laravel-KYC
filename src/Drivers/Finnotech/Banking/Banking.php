@@ -19,6 +19,12 @@ class Banking extends Factory
     public function getCard(string $cardNumber): Collection
     {
         /**
+         * Set Scope.
+         */
+
+        $this->setScope('card:information:get');
+
+        /**
          * Make request.
          */
 
@@ -59,6 +65,12 @@ class Banking extends Factory
     public function getIban(string $iban): Collection
     {
         /**
+         * Set Scope.
+         */
+
+        $this->setScope('oak:iban-inquiry:get');
+
+        /**
          * Make request.
          */
 
@@ -89,6 +101,49 @@ class Banking extends Factory
     }
 
     /**
+     * @param string $deposit
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getDeposit(string $deposit): Collection
+    {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('facility:deposit-info:get');
+
+        /**
+         * Make Request.
+         */
+
+        $request = $this->client(true)->get('facility/v2/clients/' . $this->getClientId() . '/depositInfo', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId(),
+                'deposit'   =>  $deposit
+            ],
+        ]);
+
+        /**
+         * Handle request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast and Return.
+         */
+
+        return collect(json_decode($request->getBody()->getContents())->result);
+    }
+
+    /**
      * @param string $cardNumber
      * @return Collection
      * @throws GuzzleException
@@ -97,6 +152,12 @@ class Banking extends Factory
 
     public function getDepositToCard(string $cardNumber): Collection
     {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('facility:card-to-deposit:get');
+
         /**
          * Make request.
          */
@@ -141,6 +202,12 @@ class Banking extends Factory
 
     public function getIbanToCard(string $cardNumber): Collection
     {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('facility:card-to-iban:get');
+
         /**
          * Make Request.
          */
@@ -190,10 +257,16 @@ class Banking extends Factory
     public function getDepositToIban(string $deposit, string $bank): Collection
     {
         /**
+         * Set Scope.
+         */
+
+        $this->setScope('facility:cc-deposit-iban:get');
+
+        /**
          * Make Request.
          */
 
-        $request = $this->client(true)->get('oak/v2/clients/' . $this->getClientId() . '/iban', [
+        $request = $this->client(true)->get('facility/v2/clients/' . $this->getClientId() . '/depositToIban', [
             'query' =>  [
                 'trackId'   =>  $this->generateTrackId(),
                 'deposit'   =>  $deposit,
@@ -215,9 +288,7 @@ class Banking extends Factory
          * Cast And Return.
          */
 
-        $result = json_decode($request->getBody()->getContents())->result;
-
-        return collect($result);
+        return collect(json_decode($request->getBody()->getContents())->result);
     }
 
     /**
@@ -228,6 +299,12 @@ class Banking extends Factory
 
     public function getBanks(): Collection
     {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('facility:cc-bank-info:get');
+
         /**
          * Make Request.
          */
