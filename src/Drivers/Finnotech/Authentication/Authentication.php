@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\Cache;
 class Authentication extends Factory
 {
     /**
+     * @param string|null $requiredScope
      * @return string
      * @throws GuzzleException
      * @throws KycException
      */
 
-    public function getAccessToken(): string
+    public function getAccessToken(string $requiredScope = null): string
     {
         /**
          * Seek cache.
@@ -28,8 +29,26 @@ class Authentication extends Factory
 
             $cachedAccessToken = json_decode($cachedAccessToken);
 
+            $cachedAccessTokenPassesScopes = false;
+
+            $cachedAccessTokenPassesExpiration = false;
+
             /**
-             * Check expiration time.
+             * Check if access token has requiredScopes or not.
+             */
+
+            if ($requiredScope && $cachedAccessToken->scopes){
+
+                if (str_contains($cachedAccessToken->scopes, $requiredScope)){
+
+                    $cachedAccessTokenPassesScopes = true;
+
+                }
+
+            }
+
+            /**
+             * Check if access token has valid expiration time or not.
              */
 
             $diffInHours = now()->diffInHours($cachedAccessToken->isValidUntil);
@@ -41,24 +60,58 @@ class Authentication extends Factory
 
             if ($diffInHours > config('kyc.drivers.finnotech.refresh-token-margin')){
 
-                return $cachedAccessToken->value;
+                $cachedAccessTokenPassesExpiration = true;
 
             }
 
             /**
-             * Refresh token.
+             * Return cached access token if it passes conditions.
              */
 
-            $newAccessToken = $this->refreshAccessToken($cachedAccessToken->refreshToken);
+            if ($cachedAccessTokenPassesScopes) {
+
+                if ($cachedAccessTokenPassesExpiration) {
+
+                    /**
+                     * Cached access token is all good!
+                     */
+
+                    return $cachedAccessToken->value;
+
+                } else {
+
+                    /**
+                     * Cached access token has necessary scopes but needs to be refreshed.
+                     */
+
+                    /**
+                     * Refresh token.
+                     */
+
+                    $refreshedAccessToken = $this->refreshAccessToken($cachedAccessToken->refreshToken);
+
+                    /**
+                     * Update access token.
+                     */
+
+                    $accessToken = $cachedAccessToken;
+
+                    $accessToken['value'] = $refreshedAccessToken->value;
+                    $accessToken['isValidUntil'] = now()->addMilliseconds($refreshedAccessToken->lifeTime);
+
+                }
+
+            }
 
             /**
-             * Update access token.
+             * We have to create another token.
              */
 
-            $accessToken = $cachedAccessToken;
+            else {
 
-            $accessToken['value'] = $newAccessToken->value;
-            $accessToken['isValidUntil'] = now()->addMilliseconds($newAccessToken->lifeTime);
+                $accessToken = $this->createAccessToken();
+
+            }
 
         }
 
