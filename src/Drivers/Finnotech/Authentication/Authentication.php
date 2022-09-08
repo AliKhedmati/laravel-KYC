@@ -3,6 +3,9 @@
 namespace Alikhedmati\Kyc\Drivers\Finnotech\Authentication;
 
 use Alikhedmati\Kyc\Drivers\Finnotech\Factory;
+use Alikhedmati\Kyc\Exceptions\AccessTokenHasExpired;
+use Alikhedmati\Kyc\Exceptions\AccessTokenMissedRequiredScope;
+use Alikhedmati\Kyc\Exceptions\AccessTokenNotFound;
 use Alikhedmati\Kyc\Exceptions\KycException;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
@@ -55,21 +58,25 @@ class Authentication extends Factory
      * @throws KycException
      */
 
-    public function getAccessToken(string $requiredScope = null): string
+    public function getValidAccessToken(string $requiredScope = null): string
     {
         try {
 
             /**
-             * Seek cache.
+             * Inquire cache and seek for working access token.
              */
 
             $cachedAccessToken = Cache::get('kyc.finnotech.access-token');
 
             if (!$cachedAccessToken) {
 
-                throw new KycException('NotFound');
+                throw new AccessTokenNotFound();
 
             }
+
+            /**
+             * Decode cached access token.
+             */
 
             $cachedAccessToken = json_decode($cachedAccessToken);
 
@@ -77,11 +84,11 @@ class Authentication extends Factory
              * Check if access token has requiredScopes or not.
              */
 
-            if ($requiredScope && $cachedAccessToken->scopes) {
+            if (!is_null($requiredScope) && $cachedAccessToken->scopes) {
 
                 if (!collect($cachedAccessToken->scopes)->contains($requiredScope)) {
 
-                    throw new KycException('Scope');
+                    throw new AccessTokenMissedRequiredScope();
 
                 }
 
@@ -100,7 +107,7 @@ class Authentication extends Factory
 
             if ($diffInHours < config('kyc.drivers.finnotech.refresh-token-margin')) {
 
-                throw new KycException('Expiration', $cachedAccessToken->refreshToken);
+                throw new AccessTokenHasExpired($cachedAccessToken->refreshToken);
 
             }
 
@@ -110,27 +117,19 @@ class Authentication extends Factory
 
             return $cachedAccessToken->value;
 
-        } catch (KycException $kycException){
+        } catch (AccessTokenHasExpired|AccessTokenMissedRequiredScope|AccessTokenNotFound $exception){
 
-            if (in_array($kycException->getMessage(), ['NotFound', 'Scope'])){
+            if ($exception instanceof AccessTokenNotFound || $exception instanceof AccessTokenMissedRequiredScope){
 
                 $accessToken = $this->createAccessToken();
 
-            }
+            } elseif ($exception instanceof AccessTokenHasExpired) {
 
-            elseif ($kycException->getMessage() === 'Expiration') {
-
-                $refreshedAccessToken = $this->refreshAccessToken($kycException->getCode());
+                $refreshedAccessToken = $this->refreshAccessToken($exception->getMessage());
 
                 $accessToken = $cachedAccessToken;
                 $accessToken['value'] = $refreshedAccessToken->value;
                 $accessToken['isValidUntil'] = now()->addMilliseconds($refreshedAccessToken->lifeTime);
-
-            }
-
-            else {
-
-                throw new KycException($kycException->getMessage());
 
             }
 
