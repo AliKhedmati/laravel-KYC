@@ -10,6 +10,44 @@ use Illuminate\Support\Facades\Cache;
 
 class Authentication extends Factory
 {
+
+    /**
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getAccessTokens(): Collection
+    {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('boomrang:tokens:get');
+
+        /**
+         * Make Request.
+         */
+
+        $request = $this->client(true)->get('dev/v2/clients/' . $this->getClientId() . '/tokens');
+
+        /**
+         * handle request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast And Return.
+         */
+
+        return collect(json_decode($request->getBody()->getContents())->result);
+    }
+    
     /**
      * @param string|null $requiredScope
      * @return string
@@ -19,29 +57,31 @@ class Authentication extends Factory
 
     public function getAccessToken(string $requiredScope = null): string
     {
-        /**
-         * Seek cache.
-         */
+        try {
 
-        $cachedAccessToken = Cache::get('kyc.finnotech.access-token');
+            /**
+             * Seek cache.
+             */
 
-        if ($cachedAccessToken){
+            $cachedAccessToken = Cache::get('kyc.finnotech.access-token');
+
+            if (!$cachedAccessToken) {
+
+                throw new KycException('NotFound');
+
+            }
 
             $cachedAccessToken = json_decode($cachedAccessToken);
-
-            $cachedAccessTokenPassesScopes = false;
-
-            $cachedAccessTokenPassesExpiration = false;
 
             /**
              * Check if access token has requiredScopes or not.
              */
 
-            if ($requiredScope && $cachedAccessToken->scopes){
+            if ($requiredScope && $cachedAccessToken->scopes) {
 
-                if (str_contains($cachedAccessToken->scopes, $requiredScope)){
+                if (!collect($cachedAccessToken->scopes)->contains($requiredScope)) {
 
-                    $cachedAccessTokenPassesScopes = true;
+                    throw new KycException('Scope');
 
                 }
 
@@ -58,89 +98,58 @@ class Authentication extends Factory
              * else, We will call refresh token and return the new access token.
              */
 
-            if ($diffInHours > config('kyc.drivers.finnotech.refresh-token-margin')){
+            if ($diffInHours < config('kyc.drivers.finnotech.refresh-token-margin')) {
 
-                $cachedAccessTokenPassesExpiration = true;
-
-            }
-
-            /**
-             * Return cached access token if it passes conditions.
-             */
-
-            if ($cachedAccessTokenPassesScopes) {
-
-                if ($cachedAccessTokenPassesExpiration) {
-
-                    /**
-                     * Cached access token is all good!
-                     */
-
-                    return $cachedAccessToken->value;
-
-                } else {
-
-                    /**
-                     * Cached access token has necessary scopes but needs to be refreshed.
-                     */
-
-                    /**
-                     * Refresh token.
-                     */
-
-                    $refreshedAccessToken = $this->refreshAccessToken($cachedAccessToken->refreshToken);
-
-                    /**
-                     * Update access token.
-                     */
-
-                    $accessToken = $cachedAccessToken;
-
-                    $accessToken['value'] = $refreshedAccessToken->value;
-                    $accessToken['isValidUntil'] = now()->addMilliseconds($refreshedAccessToken->lifeTime);
-
-                }
+                throw new KycException('Expiration', $cachedAccessToken->refreshToken);
 
             }
 
             /**
-             * We have to create another token.
+             * Cached access token was all good!
              */
 
-            else {
+            return $cachedAccessToken->value;
+
+        } catch (KycException $kycException){
+
+            if (in_array($kycException->getMessage(), ['NotFound', 'Scope'])){
 
                 $accessToken = $this->createAccessToken();
 
             }
 
+            elseif ($kycException->getMessage() === 'Expiration') {
+
+                $refreshedAccessToken = $this->refreshAccessToken($kycException->getCode());
+
+                $accessToken = $cachedAccessToken;
+                $accessToken['value'] = $refreshedAccessToken->value;
+                $accessToken['isValidUntil'] = now()->addMilliseconds($refreshedAccessToken->lifeTime);
+
+            }
+
+            else {
+
+                throw new KycException($kycException->getMessage());
+
+            }
+
+            /**
+             * Store access token in cache.
+             */
+
+            Cache::put(
+                key: 'kyc.finnotech.access-token',
+                value: json_encode($accessToken),
+                ttl: now()->addDays(10)
+            );
+
+            /**
+             * Return.
+             */
+
+            return $accessToken['value'];
         }
-
-        /**
-         * Access Token Not Found.
-         * So We Create It.
-         */
-
-        else {
-
-            $accessToken = $this->createAccessToken();
-
-        }
-
-        /**
-         * Store access token in cache.
-         */
-
-        Cache::put(
-            key: 'kyc.finnotech.access-token',
-            value: json_encode($accessToken),
-            ttl: now()->addDays(10)
-        );
-
-        /**
-         * Return access token.
-         */
-
-        return $accessToken->only('value')->first();
     }
 
     /**

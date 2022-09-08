@@ -18,6 +18,13 @@ class Kyc extends Factory
      * @throws KycException
      */
 
+    /*
+    Output:
+    {
+        "isValid": true
+    }
+    */
+
     public function mobileAndNationalCodeIntegration(string $mobile, string $nationalCode): Collection
     {
         /**
