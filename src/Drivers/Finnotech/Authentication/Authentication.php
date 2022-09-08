@@ -10,6 +10,7 @@ use Alikhedmati\Kyc\Exceptions\KycException;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Authentication extends Factory
 {
@@ -58,7 +59,7 @@ class Authentication extends Factory
      * @throws KycException
      */
 
-    public function getValidAccessToken(string $requiredScope = null): string
+    public function getAccessToken(string $requiredScope = null): string
     {
         try {
 
@@ -123,15 +124,17 @@ class Authentication extends Factory
 
                 $accessToken = $this->createAccessToken();
 
-            } elseif ($exception instanceof AccessTokenHasExpired) {
+            } else {
 
                 $refreshedAccessToken = $this->refreshAccessToken($exception->getMessage());
 
                 $accessToken = $cachedAccessToken;
-                $accessToken['value'] = $refreshedAccessToken->value;
-                $accessToken['isValidUntil'] = now()->addMilliseconds($refreshedAccessToken->lifeTime);
+                $accessToken->value = $refreshedAccessToken['value'];
+                $accessToken->isValidUntil = now()->addMilliseconds($refreshedAccessToken['lifeTime']);
 
             }
+
+            $accessToken = collect($accessToken);
 
             /**
              * Store access token in cache.
@@ -139,15 +142,15 @@ class Authentication extends Factory
 
             Cache::put(
                 key: 'kyc.finnotech.access-token',
-                value: json_encode($accessToken),
-                ttl: now()->addDays(10)
+                value: $accessToken->toJson(),
+                ttl: now()->addDays()
             );
 
             /**
              * Return.
              */
 
-            return $accessToken['value'];
+            return $accessToken->only('value')->first();
         }
     }
 
