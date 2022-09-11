@@ -45,14 +45,18 @@ class Banking extends Factory
         }
 
         /**
-         * Return.
+         * Cast And Return.
          */
 
-        /**
-         * Todo: Cast the output.
-         */
+        $result = json_decode($request->getBody()->getContents())->result;
 
-        return collect(json_decode($request->getBody()->getContents())->result);
+        $result = [
+            'cardNumber'    =>  $result->destCard,
+            'ownerName' =>  $result->name,
+            'bankName'  =>  $result->bankName
+        ];
+
+        return collect($result);
     }
 
     /**
@@ -98,49 +102,6 @@ class Banking extends Factory
         $result = json_decode($request->getBody()->getContents())->result;
 
         return collect($result);
-    }
-
-    /**
-     * @param string $deposit
-     * @return Collection
-     * @throws GuzzleException
-     * @throws KycException
-     */
-
-    public function getDeposit(string $deposit): Collection
-    {
-        /**
-         * Set Scope.
-         */
-
-        $this->setScope('facility:deposit-info:get');
-
-        /**
-         * Make Request.
-         */
-
-        $request = $this->client(true)->get('facility/v2/clients/' . $this->getClientId() . '/depositInfo', [
-            'query' =>  [
-                'trackId'   =>  $this->generateTrackId(),
-                'deposit'   =>  $deposit
-            ],
-        ]);
-
-        /**
-         * Handle request failures.
-         */
-
-        if ($request->getStatusCode() != 200){
-
-            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
-
-        }
-
-        /**
-         * Cast and Return.
-         */
-
-        return collect(json_decode($request->getBody()->getContents())->result);
     }
 
     /**

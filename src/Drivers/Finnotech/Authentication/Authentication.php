@@ -99,7 +99,7 @@ class Authentication extends Factory
              * Check if access token has valid expiration time or not.
              */
 
-            $diffInHours = now()->diffInHours($cachedAccessToken->isValidUntil);
+            $diffInHours = now()->diffInMinutes($cachedAccessToken->isValidUntil);
 
             /**
              * Logic: Cached access token should have at least N hours of expiration time.
