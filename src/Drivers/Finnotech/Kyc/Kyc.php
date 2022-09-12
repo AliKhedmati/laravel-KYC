@@ -18,7 +18,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function mobileAndNationalCodeIntegration(string $mobile, string $nationalCode): Collection
+    public function getIntegrationOfMobileAndNationalCode(string $mobile, string $nationalCode): Collection
     {
         /**
          * Set scope.
@@ -52,7 +52,11 @@ class Kyc extends Factory
          * Return response.
          */
 
-        return collect(json_decode($request->getBody()->getContents())->result);
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect([
+            'is_integrated' =>  $result->isVerified
+        ]);
     }
 
     /**
@@ -95,7 +99,9 @@ class Kyc extends Factory
          * Cast and Return.
          */
 
-        return collect(json_decode($request->getBody()->getContents())->result);
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect($result);
     }
 
     /**
@@ -106,7 +112,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function getNationalCardOCR(string $pathToNationalCardImage, bool $isFrontSide): Collection
+    public function getNationalCardData(string $pathToNationalCardImage, bool $isFrontSide): Collection
     {
         /**
          * Set Scope.
@@ -148,7 +154,9 @@ class Kyc extends Factory
          * Cast And Return.
          */
 
-        return collect(json_decode($request->getBody()->getContents())->result);
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect($result);
     }
 
     /**
@@ -162,7 +170,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function videoAndNationalCardImageIntegration(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
+    public function getIntegrationOfLiveVideoAndNationalImage(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
     {
         /**
          * Set Scope.
@@ -216,6 +224,8 @@ class Kyc extends Factory
          * Cast and Return.
          */
 
-        return collect(json_decode($request->getBody()->getContents())->result);
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect($result);
     }
 }
