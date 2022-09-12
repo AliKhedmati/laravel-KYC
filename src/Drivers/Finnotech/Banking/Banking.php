@@ -50,13 +50,21 @@ class Banking extends Factory
 
         $result = json_decode($request->getBody()->getContents())->result;
 
-        $result = [
-            'cardNumber'    =>  $result->destCard,
-            'ownerName' =>  $result->name,
-            'bankName'  =>  $result->bankName
-        ];
+        /**
+         * Handle failure.
+         */
 
-        return collect($result);
+        if (!$result->destCard){
+
+            throw new KycException(trans('kyc::errors.parameterIsInvalid', ['param'=>trans('kyc::attributes.cardNumber')]));
+
+        }
+
+        return collect([
+            'card'    =>  $result->destCard,
+            'owners' =>  $result->name,
+            'bank'  =>  $result->bankName
+        ]);
     }
 
     /**
@@ -101,7 +109,15 @@ class Banking extends Factory
 
         $result = json_decode($request->getBody()->getContents())->result;
 
-        return collect($result);
+        return collect([
+            'Iban'    =>  $result->IBAN,
+            'deposit' =>  $result->deposit,
+            'status'    =>  $result->depositStatus,
+            'status_casted'   =>  $result->depositDescription,
+            'type'  =>  $result->depositComment,
+            'owners'    =>  collect($result->depositOwners)->map(fn($v, $k) => $v->firstName . ' ' . $v->lastName),
+            'bank'  =>  $result->bankName,
+        ]);
     }
 
     /**
@@ -111,7 +127,7 @@ class Banking extends Factory
      * @throws KycException
      */
 
-    public function getDepositToCard(string $cardNumber): Collection
+    public function getCardToDeposit(string $cardNumber): Collection
     {
         /**
          * Set Scope.
@@ -147,10 +163,9 @@ class Banking extends Factory
         $result = json_decode($request->getBody()->getContents())->result;
 
         return collect([
-            'owner' =>  $result->name,
-            'cardNumber'    =>  $cardNumber,
-            'depositNumber' =>  $result->deposit,
-            //Todo: $result->result is also available and should be added later.
+            'owners' =>  [$result->name],
+            'card'    =>  $cardNumber,
+            'deposit' =>  $result->deposit,
         ]);
     }
 
@@ -161,7 +176,7 @@ class Banking extends Factory
      * @throws KycException
      */
 
-    public function getIbanToCard(string $cardNumber): Collection
+    public function getCardToIban(string $cardNumber): Collection
     {
         /**
          * Set Scope.
@@ -198,12 +213,11 @@ class Banking extends Factory
         $result = json_decode($request->getBody()->getContents())->result;
 
         return collect([
-            'owner' =>  $result->depositOwners,
-            'cardNumber'    =>  $cardNumber,
-            'depositNumber' =>  $result->deposit,
-            'IBAN'  =>  $result->IBAN,
-            'bankName'  =>  $result->bankName,
-            //Todo: $result->depositStatus is also available and should be added later.
+            'owners' =>  [$result->depositOwners],
+            'card'    =>  $cardNumber,
+            'deposit' =>  $result->deposit,
+            'Iban'  =>  $result->IBAN,
+            'bank'  =>  $result->bankName,
         ]);
     }
 
@@ -231,7 +245,7 @@ class Banking extends Factory
             'query' =>  [
                 'trackId'   =>  $this->generateTrackId(),
                 'deposit'   =>  $deposit,
-                'bank'  =>  $bank
+                'bankCode'  =>  $bank
             ],
         ]);
 
@@ -249,7 +263,14 @@ class Banking extends Factory
          * Cast And Return.
          */
 
-        return collect(json_decode($request->getBody()->getContents())->result);
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect([
+            'owners'    =>  [$result->depositOwners],
+            'deposit'   =>  $result->deposit,
+            'bank'  =>  $result->bankName,
+            'Iban'  =>  $result->iban
+        ]);
     }
 
     /**
@@ -290,6 +311,12 @@ class Banking extends Factory
          * Cast And Return.
          */
 
-        return collect(json_decode($request->getBody()->getContents())->result);
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect($result)->map(fn($v) => [
+            'cardsPrefix'   =>  $v->cardPrefix,
+            'code'  =>  $v->code,
+            'name'  =>  $v->name
+        ]);
     }
 }
