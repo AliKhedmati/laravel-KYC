@@ -18,7 +18,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function getIntegrationOfMobileAndNationalCode(string $mobile, string $nationalCode): Collection
+    public function checkMobileAndNationalCode(string $mobile, string $nationalCode): Collection
     {
         /**
          * Set scope.
@@ -55,7 +55,7 @@ class Kyc extends Factory
         $result = json_decode($request->getBody()->getContents())->result;
 
         return collect([
-            'is_integrated' =>  $result->isVerified
+            'is_integrated' =>  $result->isValid
         ]);
     }
 
