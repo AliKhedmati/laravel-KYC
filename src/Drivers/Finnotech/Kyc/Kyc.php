@@ -66,7 +66,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function getPostalCodeInformation(string $postalCode): Collection
+    public function getZipCodeInformation(string $postalCode): Collection
     {
         /**
          * Set Scope.
