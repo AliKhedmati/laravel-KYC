@@ -102,15 +102,15 @@ class Kyc extends Factory
         $result = json_decode($request->getBody()->getContents())->result;
 
         $result = collect([
-            'zip_code'  =>  $result['postalCode'],
-            'province'  =>  $result['Province'],
-            'town'  =>  $result['TownShip'],
-            'street'    =>  $result['SubLocality'],
-            'alley' =>  $result['street'],
-            'house_number'  =>  $result['HouseNumber'],
-            'floor' =>  $result['Floor'],
-            'unit'  =>  $result['SideFloor'],
-            'zone'  =>  $result['Zone'],
+            'zip_code'  =>  $result->postalCode,
+            'province'  =>  $result->Province,
+            'town'  =>  $result->TownShip,
+            'street'    =>  $result->SubLocality,
+            'alley' =>  $result->street,
+            'house_number'  =>  $result->HouseNumber,
+            'floor' =>  $result->Floor,
+            'unit'  =>  $result->SideFloor,
+            'zone'  =>  $result->Zone,
         ])->map(fn($i)=>(string)$i);
 
         return collect($result);
