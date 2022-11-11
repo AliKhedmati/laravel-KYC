@@ -182,7 +182,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function getIntegrationOfLiveVideoAndNationalImage(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
+    public function videoVerification(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
     {
         /**
          * Set Scope.
