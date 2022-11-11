@@ -18,7 +18,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function checkMobileAndNationalCode(string $mobile, string $nationalCode): Collection
+    public function getMobileOwnership(string $mobile, string $nationalCode): Collection
     {
         /**
          * Set scope.
@@ -66,7 +66,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function getZipCodeInformation(string $postalCode): Collection
+    public function getZipCode(string $postalCode): Collection
     {
         /**
          * Set Scope.
@@ -124,7 +124,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function getNationalCardData(string $pathToNationalCardImage, bool $isFrontSide): Collection
+    public function getNationalCard(string $pathToNationalCardImage, bool $isFrontSide): Collection
     {
         /**
          * Set Scope.
@@ -182,7 +182,7 @@ class Kyc extends Factory
      * @throws KycException
      */
 
-    public function videoVerification(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
+    public function getVideoVerification(string $videoPath, string $nationalCode, string $birthDate, string $nationalCardSerialNumber, string $speechText): Collection
     {
         /**
          * Set Scope.
@@ -219,6 +219,50 @@ class Kyc extends Factory
                     'name'  =>  'speechText',
                     'contents'  =>  $speechText
                 ],
+            ],
+        ]);
+
+        /**
+         * Handle request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast and Return.
+         */
+
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect($result);
+    }
+
+    /**
+     * @param string $nationalCode
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getClient(string $nationalCode): Collection
+    {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('oak:user:get');
+
+        /**
+         * Make request.
+         */
+
+        $request = $this->client(true)->get('oak/v2/clients/'. $this->getClientId() . '/users/'. $nationalCode . '/customerInfo', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId()
             ],
         ]);
 
