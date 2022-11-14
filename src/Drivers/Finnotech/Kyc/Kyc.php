@@ -194,7 +194,7 @@ class Kyc extends Factory
         $request = $this->client(true)->get('/facility/v2/clients/'. $this->getClientId() .'/users/'. $nationalCode . '/cc/nidInquiry', [
             'query' =>  [
                 'trackId'   =>  $this->generateTrackId(),
-                'birthDate'
+                'birthDate' =>  $birthDate
             ],
         ]);
 
