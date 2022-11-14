@@ -172,6 +172,52 @@ class Kyc extends Factory
     }
 
     /**
+     * @param string $nationalCode
+     * @param string $birthDate
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getNationalCode(string $nationalCode, string $birthDate): Collection
+    {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('facility:cc-nid-inquiry:get');
+
+        /**
+         * Make request.
+         */
+
+        $request = $this->client(true)->get('/facility/v2/clients/'. $this->getClientId() .'/users/'. $nationalCode . '/cc/nidInquiry', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId(),
+                'birthDate'
+            ],
+        ]);
+
+        /**
+         * Handle request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast and Return.
+         */
+
+        $result = json_decode($request->getBody()->getContents())->result;
+
+        return collect($result);
+    }
+
+    /**
      * @param string $videoPath
      * @param string $nationalCode
      * @param string $birthDate
@@ -219,50 +265,6 @@ class Kyc extends Factory
                     'name'  =>  'speechText',
                     'contents'  =>  $speechText
                 ],
-            ],
-        ]);
-
-        /**
-         * Handle request failures.
-         */
-
-        if ($request->getStatusCode() != 200){
-
-            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
-
-        }
-
-        /**
-         * Cast and Return.
-         */
-
-        $result = json_decode($request->getBody()->getContents())->result;
-
-        return collect($result);
-    }
-
-    /**
-     * @param string $nationalCode
-     * @return Collection
-     * @throws GuzzleException
-     * @throws KycException
-     */
-
-    public function getClient(string $nationalCode): Collection
-    {
-        /**
-         * Set Scope.
-         */
-
-        $this->setScope('oak:user:get');
-
-        /**
-         * Make request.
-         */
-
-        $request = $this->client(true)->get('oak/v2/clients/'. $this->getClientId() . '/users/'. $nationalCode . '/customerInfo', [
-            'query' =>  [
-                'trackId'   =>  $this->generateTrackId()
             ],
         ]);
 
