@@ -87,7 +87,7 @@ class Banking extends Factory
          * Make request.
          */
 
-        $request = $this->client(true)->get('kyc/v2/clients/' . $this->getClientId() . '/mobileCardVerification', [
+        $request = $this->client(true)->post('kyc/v2/clients/' . $this->getClientId() . '/mobileCardVerification', [
             'query' =>  [
                 'trackId'   =>  $this->generateTrackId()
             ],
