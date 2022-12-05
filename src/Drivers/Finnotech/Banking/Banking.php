@@ -68,6 +68,55 @@ class Banking extends Factory
     }
 
     /**
+     * @param string $cardNumber
+     * @param string $mobile
+     * @return Collection
+     * @throws GuzzleException
+     * @throws KycException
+     */
+
+    public function getCardOwnership(string $cardNumber, string $mobile): Collection
+    {
+        /**
+         * Set Scope.
+         */
+
+        $this->setScope('kyc:mobile-card-verification:post');
+
+        /**
+         * Make request.
+         */
+
+        $request = $this->client(true)->get('kyc/v2/clients/' . $this->getClientId() . '/mobileCardVerification', [
+            'query' =>  [
+                'trackId'   =>  $this->generateTrackId()
+            ],
+            'json'  =>  [
+                'mobile'    =>  $mobile,
+                'card'  =>  $cardNumber
+            ],
+        ]);
+
+        /**
+         * Handle request failures.
+         */
+
+        if ($request->getStatusCode() != 200){
+
+            throw new KycException(json_decode($request->getBody()->getContents())->error->message);
+
+        }
+
+        /**
+         * Cast And Return.
+         */
+
+        return collect([
+            'is_integrated' =>  json_decode($request->getBody()->getContents())->result->isValid
+        ]);
+    }
+
+    /**
      * @param string $iban
      * @return Collection
      * @throws GuzzleException
